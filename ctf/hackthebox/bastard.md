@@ -13,7 +13,7 @@ PORT      STATE SERVICE REASON
 
 Visiting the port 80 I find a drupal login panel
 
-![Desktop View](img/htb/bastard/drupal_login_1.png)
+![Desktop View](.gitbook/assets/img/htb/bastard/drupal_login_1.png)
 
 
 doing a curl to the changelog.txt I'm able to enumerate the version which in this case is 7.54

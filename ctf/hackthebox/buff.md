@@ -11,7 +11,7 @@ PORT     STATE SERVICE    REASON
 
 visiting the port 8080 of the machine I find a "gym" website, heading to contact.php I find is a site built with Gym Management Software 1.0
 
-![Desktop View](img/htb/buff/contact_php.png)
+![Desktop View](.gitbook/assets/img/htb/buff/contact_php.png)
 
 ## shell as shaun
 
@@ -130,11 +130,11 @@ C:\Users\user\Desktop>chisel_1.7.3_windows_amd64 client 192.168.56.1:1234 R:8888
 To import the file to xdbg I'll do  the following
 1. go to File > Open > CloudMe.exe
 
-![Desktop View](img/htb/buff/file_open.png)
+![Desktop View](.gitbook/assets/img/htb/buff/file_open.png)
 
 2. click repeatedly on the run button until the program starts
 
-![Desktop View](img/htb/buff/run_button.png)
+![Desktop View](.gitbook/assets/img/htb/buff/run_button.png)
 
 Once the program starts I'll begin to write the exploit script in python.
 
@@ -166,13 +166,13 @@ python exp.py
 
 by checking the registers I confirm that it is vulnerable to buffer overflow since eip was overwritten with "A"s
 
-![Desktop View](img/htb/buff/registers_1.png)
+![Desktop View](.gitbook/assets/img/htb/buff/registers_1.png)
 
 Since the program has crashed I'll have to reload it, to do it I 
 1. click on the restart button
 2. click run button repeatedly until the program starts
 
-![Desktop View](img/htb/buff/buttons.png)
+![Desktop View](.gitbook/assets/img/htb/buff/buttons.png)
 
 This process will have to be repeated through all the debugging since the program will be crashing many times due to the overflow, it will be referred as __reloading the program in the debugger__.
 
@@ -206,7 +206,7 @@ if __name__ == '__main__':
 I check the registers and copy the value of EIP
 
 
-![Desktop View](img/htb/buff/registers_2.png)
+![Desktop View](.gitbook/assets/img/htb/buff/registers_2.png)
 
 
 by quering the pattern I find that the offset is at 1052 bytes
@@ -240,7 +240,7 @@ Before running the exploit I reload cloudme.exe in the debugger.
 
 After sending the new string I verify that I have control over the EIP and can continue creating the exploit 
 
-![Desktop View](img/htb/buff/registers_3.png)
+![Desktop View](.gitbook/assets/img/htb/buff/registers_3.png)
 
 #### looking for badchars
 
@@ -276,26 +276,26 @@ To create a bytearray with ERC
 
 1. go to the log tab in xdbg
 
-![Desktop View](img/htb/buff/log_tab.png)
+![Desktop View](.gitbook/assets/img/htb/buff/log_tab.png)
 
 2. on the command prompt at the bottom type `ERC --config setworkingdirectory C:\users\user\desktop\`
 
-![Desktop View](img/htb/buff/command_prompt_1.png)
+![Desktop View](.gitbook/assets/img/htb/buff/command_prompt_1.png)
 
 3. on the command prompt at the bottom type `ERC --bytearray` this will generate two bytearray files in the working directory
 
-![Desktop View](img/htb/buff/files_1.png)
+![Desktop View](.gitbook/assets/img/htb/buff/files_1.png)
 
 After doing this I'll send the bytearray to the program and will check the characters, the bytearray will be stored in ESP.
 To check for the array I can click on "Follow in Dump" to see the bytearray in the registers or in this case copy the value which is the address of ESP and compare it with the bytearray
 
-![Desktop View](img/htb/buff/esp_1.png)
+![Desktop View](.gitbook/assets/img/htb/buff/esp_1.png)
 
 * in the log tab on the command prompt at the bottom I type `ERC --compare 0x00A3AA30 C:\users\user\desktop\bytearray_1.bin`  0x00A3AA30 is the address of ESP that I copied before in "Copy Value" and the bytearray is the one generated before. 
 
 * The result is that there are no bad chars, but just to be sure I'll remove the common bad chars such as `\x00\x0a\x0d\xff`
 
-![Desktop View](img/htb/buff/no_bad_chars.png)
+![Desktop View](.gitbook/assets/img/htb/buff/no_bad_chars.png)
 
 new bytearray
 ```python
@@ -322,20 +322,20 @@ if __name__ == '__main__':
 
 I create another byte-array omitting those characters in ERC `ERC --bytearray -bytes \x00\x0a\x0d\xff` this will create another two files ByteArray_2.txt and ByteArray_2.bin
 
-![Desktop View](img/htb/buff/erc_1.png)
+![Desktop View](.gitbook/assets/img/htb/buff/erc_1.png)
 
 I reload the program in the debugger, send the new byte-array and compare the characters with ERC
 `erc --compare 0x00A3AA30 C:\users\user\desktop\bytearray_2.bin`
 
 everything is correct 
 
-![Desktop View](img/htb/buff/no_bad_chars_2.png)
+![Desktop View](.gitbook/assets/img/htb/buff/no_bad_chars_2.png)
 
 #### finding a return instruction
 
 I have to find an instruction that does a jmp esp so that instruction will be loaded to the eip register and make it execute the shellcode, to find a valid instruction I'll use `erc --moduleinfo -nxcompat` command to find modules that don't have nxcompat/stack execution enabled and don't have rebase 
 
-![Desktop View](img/htb/buff/moduleinfo_1.png)
+![Desktop View](.gitbook/assets/img/htb/buff/moduleinfo_1.png)
 
 There are many modules (83) so I copy the output to a file and filter with grep the "True" string resulting in the following:
 
@@ -359,24 +359,24 @@ Process Name: CloudMe Modules total: 83
  ```
 
 I'll be using the first module, first I go to symbols and click on the selected module
-![Desktop View](img/htb/buff/module_1.png)
+![Desktop View](.gitbook/assets/img/htb/buff/module_1.png)
 
 I right click on the start address and copy the value 
 
-![Desktop View](img/htb/buff/copy_start_address.png)
+![Desktop View](.gitbook/assets/img/htb/buff/copy_start_address.png)
 
 I click on the References tab
 
-![Desktop View](img/htb/buff/references_tab.png)
+![Desktop View](.gitbook/assets/img/htb/buff/references_tab.png)
 
 On the command prompt I type `findall 00401000,ffe4` looking for a jmp esp address in its hexadecimal form which is FF E4
 
-![Desktop View](img/htb/buff/findall_1.png)
+![Desktop View](.gitbook/assets/img/htb/buff/findall_1.png)
 
 and I can use any of these instructions 
 
 
-![Desktop View](img/htb/buff/instructions_1.png)
+![Desktop View](.gitbook/assets/img/htb/buff/instructions_1.png)
 
 
 I add those instructions to the script in the eip variable.

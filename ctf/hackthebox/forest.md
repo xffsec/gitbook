@@ -250,43 +250,43 @@ after it finishes collecting the data I download the zipped file to my machine
 
 and I upload the data to bloodhound 
 
-![](img/htb/forest/upload_data.png)
+![](.gitbook/assets/img/htb/forest/upload_data.png)
 
 I select the option of "shortest paths to high value targets" for the domain HTB.LOCAL
 
-![](img/htb/forest/options.png)
+![](.gitbook/assets/img/htb/forest/options.png)
 
 
 ### finding paths to domain admin
 here I find a graphic representation of a path to become a domain admin from  the user svc-alfresco 
 
-![](img/htb/forest/path1.png)
+![](.gitbook/assets/img/htb/forest/path1.png)
 
 to find a more descriptive way I filter by the user svc-alfresco in the search bar (to add the skull do right click > mark user as owned)
 
-![](img/htb/forest/search1.png)
+![](.gitbook/assets/img/htb/forest/search1.png)
 
 to view a new graph I click on the svc-alfresco node and in the node info tab I click on reachable high value targets
 
-![](img/htb/forest/node1.png)
+![](.gitbook/assets/img/htb/forest/node1.png)
 
 I find that this user is part of an account operators group
-![](img/htb/forest/path2.png)
+![](.gitbook/assets/img/htb/forest/path2.png)
 
 clicking on this node and viewing the high reachable targets I find another interesting path, that this user can perform a "writedacl" on the htb.local domain
 
-![](img/htb/forest/node2.png)
+![](.gitbook/assets/img/htb/forest/node2.png)
 
 I click on help to view more information about this privilege
 
-![](img/htb/forest/info.png)
+![](.gitbook/assets/img/htb/forest/info.png)
 
 > The members of the group EXCHANGE WINDOWS PERMISSIONS@HTB.LOCAL have permissions to modify the DACL (Discretionary Access Control List) on the domain HTB.LOCAL
 > With write access to the target object's DACL, you can grant yourself any privilege you want on the object.
 
 on the windows abuse tab it shows how to perform this dcsync attack step by step 
 
-![](img/htb/forest/info1.png)
+![](.gitbook/assets/img/htb/forest/info1.png)
 ### write dacl attack
 to perform this attack first I'll create a new user on the domain 
 
@@ -311,7 +311,7 @@ Impacket v0.12.0.dev1 - Copyright 2023 Fortra
 
 to do this first I have to add then new user to the group exchange windows permissions 
 
-![](img/htb/forest/path3.png)
+![](.gitbook/assets/img/htb/forest/path3.png)
 
 
 ```

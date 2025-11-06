@@ -1,5 +1,0 @@
----
-icon: cube
----
-
-# Bandit

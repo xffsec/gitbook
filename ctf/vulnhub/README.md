@@ -1,6 +1,6 @@
 ---
-icon: cube
+icon: layer-plus
 ---
 
-# VulnHub
+# Vulnhub
 

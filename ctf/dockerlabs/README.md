@@ -1,5 +1,5 @@
 ---
-icon: cube
+icon: whale
 ---
 
 # Dockerlabs

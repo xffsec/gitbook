@@ -2,5 +2,5 @@
 icon: python
 ---
 
-# Offensive Python
+# Python
 

@@ -1,4 +1,5 @@
 ---
+description: Basic example
 icon: python
 ---
 

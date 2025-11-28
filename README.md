@@ -10,7 +10,7 @@ InfoSec Technical Reference | Blue & Red Team Playbooks, CTF Solution Documentat
 
 ### whoami
 
-**Profile:** Computer Engineering Undergraduate | eCPPT Certified Professional | Active CTF Participant and Security Researcher
+**Profile:** Computer Engineering Undergraduate | eCPPT Certified Professional | Active CTF Participant and Information Security Researcher
 
 ### about this gitbook
 

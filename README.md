@@ -1,12 +1,12 @@
 ---
-icon: circle-user
+icon: empty-set
 ---
 
 # voidvarov
 
 ## welcome
 
-InfoSec Technical Reference | Blue & Red Team Playbooks, CTF Solution Documentation, and Enterprise-Grade Quick Guides 🔐
+InfoSec Technical Reference | Blue & Red Team Playbooks, CTF Solution Documentation, and Enterprise-Grade Quick Guides&#x20;
 
 ### whoami
 
